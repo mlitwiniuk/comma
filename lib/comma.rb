@@ -1,3 +1,4 @@
+# encoding: UTF-8
 # load the right csv library
 if RUBY_VERSION >= '1.9'
   require 'csv'
@@ -13,7 +14,7 @@ else
   end
 end
 
-if defined? Rails and (Rails.version.split('.').map(&:to_i).first < 3)
+if defined? Rails and (Rails.version.split('.').first.to_i < 3)
   raise "Error - This Comma version only supports Rails 3.x. Please use a 2.x version of Comma for use with earlier rails versions."
 end
 
@@ -36,9 +37,11 @@ require 'comma/object'
 #Load into Rails controllers
 if defined?(ActionController::Renderers) && ActionController::Renderers.respond_to?(:add)
   ActionController::Renderers.add :csv do |obj, options|
+    BOM = "\377\376"
     filename    = options[:filename] || 'data'
     #Capture any CSV optional settings passed to comma or comma specific options
     csv_options = options.slice(*CSV_HANDLER::DEFAULT_OPTIONS.merge(Comma::DEFAULT_OPTIONS).keys)
-    send_data obj.to_comma(csv_options), :type => Mime::CSV, :disposition => "attachment; filename=#{filename}.csv"
+    content = obj.to_comma(csv_options)
+    send_data content, :type => Mime::CSV, :disposition => "attachment; filename=#{filename}.csv"
   end
 end
